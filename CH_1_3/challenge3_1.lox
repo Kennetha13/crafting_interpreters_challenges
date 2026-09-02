@@ -1,0 +1,17 @@
+// Program 1: Test if 0 is treated as false.
+
+if (0) {
+    print "true";
+} else {
+    print "false";
+}
+
+// Expected:
+// I expected this to print "false" because languages like C treat 0 as false.
+
+// Actual:
+// It prints "true".
+
+// Why:
+// In Lox, only false and nil are falsey.
+// Every other value, including 0, is considered true.

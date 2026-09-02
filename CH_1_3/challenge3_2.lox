@@ -1,0 +1,14 @@
+// Program 2: Add a string and a number.
+
+print "Age: " + 20;
+
+// Expected:
+// I thought Lox might automatically convert 20 into the string "20"
+// and print "Age: 20", similar to JavaScript.
+
+// Actual:
+// Lox gives a runtime error.
+
+// Why:
+// Lox does not automatically convert between numbers and strings.
+// The + operator requires either two numbers or two strings.

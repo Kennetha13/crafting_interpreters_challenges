@@ -1,0 +1,18 @@
+// Program 3: Call a function with too few arguments.
+
+fun add(a, b) {
+    return a + b;
+}
+
+print add(5);
+
+// Expected:
+// I wondered if the missing argument b might automatically become nil.
+
+// Actual:
+// Lox gives a runtime error.
+
+// Why:
+// Lox requires the number of arguments in a function call to match
+// the number of parameters the function expects.
+// add() expects 2 arguments, but only 1 was provided.
