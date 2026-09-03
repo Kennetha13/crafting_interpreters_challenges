@@ -85,26 +85,26 @@ int main() {
 
     Node *head = NULL;
 
-    insert(&head, "apple");
-    insert(&head, "banana");
-    insert(&head, "orange");
+    insert(&head, "CS4080");
+    insert(&head, "CS4800");
+    insert(&head, "CS2610");
 
     printf("List:\n");
     printList(head);
 
-    Node *result = find(head, "banana");
+    Node *result = find(head, "CS2610");
 
     if (result != NULL) {
         printf("\nFound: %s\n", result->value);
     }
 
-    delete(&head, "banana");
+    delete(&head, "CS4800");
 
-    printf("\nAfter deleting banana:\n");
+    printf("\nAfter deleting CS4800:\n");
     printList(head);
 
-    delete(&head, "apple");
-    delete(&head, "orange");
+    delete(&head, "CS4080");
+    delete(&head, "CS2610");
 
     return 0;
 }
