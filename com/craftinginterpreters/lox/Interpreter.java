@@ -9,9 +9,18 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     private Environment environment = new Environment();
 
     void interpret(List<Stmt> statements) {
+        interpret(statements, false);
+    }
+
+    void interpret(List<Stmt> statements, boolean replMode) {
         try {
             for (Stmt statement : statements) {
-                execute(statement);
+                if (replMode && statement instanceof Stmt.Expression) {
+                    Object value = evaluate(((Stmt.Expression) statement).expression);
+                    System.out.println(stringify(value));
+                } else {
+                    execute(statement);
+                }
             }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
@@ -138,7 +147,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitVarStmt(Stmt.Var stmt) {
-        Object value = null;
+        Object value = Environment.UNINITIALIZED;
         if (stmt.initializer != null) {
             value = evaluate(stmt.initializer);
         }

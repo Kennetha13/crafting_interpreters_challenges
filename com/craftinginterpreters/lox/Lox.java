@@ -48,13 +48,17 @@ public class Lox {
       String line = reader.readLine();
       if (line == null)
         break;
-      run(line);
+      run(line, true);
       hadError = false;
 
     }
   }
 
   private static void run(String source) {
+    run(source, false);
+  }
+
+  private static void run(String source, boolean replMode) {
     Scanner scanner = new Scanner(source);
     List<Token> tokens = scanner.scanTokens();
 
@@ -65,7 +69,7 @@ public class Lox {
     if (hadError)
       return;
 
-    interpreter.interpret(statements);
+    interpreter.interpret(statements, replMode);
   }
 
   static void error(int line, String message) {
