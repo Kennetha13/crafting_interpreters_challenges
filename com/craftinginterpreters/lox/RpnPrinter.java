@@ -57,6 +57,15 @@ class RpnPrinter implements Expr.Visitor<String> {
                 + " =";
     }
 
+    @Override
+    public String visitLogicalExpr(Expr.Logical expr) {
+        return expr.left.accept(this)
+                + " "
+                + expr.right.accept(this)
+                + " "
+                + expr.operator.lexeme;
+    }
+
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
                 new Expr.Grouping(
