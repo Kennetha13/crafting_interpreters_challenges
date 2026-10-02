@@ -1,0 +1,31 @@
+// Chapter 10, Challenge 2: anonymous functions (lambdas).
+
+// 1. The book's own example: pass an anonymous function straight in,
+//    without ever giving it a name.
+fun thrice(fn) {
+  for (var i = 1; i <= 3; i = i + 1) {
+    fn(i);
+  }
+}
+
+thrice(fun (a) {
+  print a;
+});
+
+// 2. Store an anonymous function in a variable and call it later.
+var add = fun (a, b) {
+  return a + b;
+};
+print add(2, 3);
+print add;
+
+// 3. The tricky case
+fun () {};
+print "bare anonymous function statement parsed fine";
+
+// 4. Named declarations and recursion still work unchanged.
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+print fib(8);

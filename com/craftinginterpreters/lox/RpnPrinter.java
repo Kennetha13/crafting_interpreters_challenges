@@ -77,6 +77,11 @@ class RpnPrinter implements Expr.Visitor<String> {
         return builder.toString();
     }
 
+    @Override
+    public String visitFunctionExpr(Expr.Function expr) {
+        return "<fn>";
+    }
+
     public static void main(String[] args) {
         Expr expression = new Expr.Binary(
                 new Expr.Grouping(
