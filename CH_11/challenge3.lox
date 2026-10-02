@@ -1,0 +1,7 @@
+fun bad() {
+  var unused = "oops";
+  print "hi";
+}
+bad();
+
+
