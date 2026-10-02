@@ -53,4 +53,26 @@ class Environment {
         values.put(name, value);
     }
 
+    Environment ancestor(int distance) {
+        Environment environment = this;
+        for (int i = 0; i < distance; i++) {
+            environment = environment.enclosing;
+        }
+
+        return environment;
+    }
+
+    Object getAt(int distance, String name) {
+        Object value = ancestor(distance).values.get(name);
+        if (value == UNINITIALIZED) {
+            throw new RuntimeError(new Token(TokenType.IDENTIFIER, name, null, -1),
+                    "Uninitialized variable '" + name + "'.");
+        }
+        return value;
+    }
+
+    void assignAt(int distance, Token name, Object value) {
+        ancestor(distance).values.put(name.lexeme, value);
+    }
+
 }
