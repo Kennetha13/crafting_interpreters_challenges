@@ -1,0 +1,8 @@
+class Early {
+  init(flag) {
+    if (!flag) return;
+    this.set = true;
+  }
+}
+var e = Early(false);
+print "ok";

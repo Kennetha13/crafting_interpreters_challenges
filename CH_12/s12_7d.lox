@@ -1,0 +1,5 @@
+class Bad {
+  init() {
+    return "something";
+  }
+}

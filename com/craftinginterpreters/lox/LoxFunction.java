@@ -7,8 +7,11 @@ class LoxFunction implements LoxCallable {
     private final Environment closure;
     // Null for an anonymous function.
     private final String name;
+    private final boolean isInitializer;
 
-    LoxFunction(Expr.Function declaration, Environment closure, String name) {
+    LoxFunction(Expr.Function declaration, Environment closure, String name,
+            boolean isInitializer) {
+        this.isInitializer = isInitializer;
         this.closure = closure;
         this.declaration = declaration;
         this.name = name;
@@ -29,9 +32,20 @@ class LoxFunction implements LoxCallable {
         try {
             interpreter.executeBlock(declaration.body, environment);
         } catch (Return returnValue) {
+            if (isInitializer)
+                return closure.getAt(0, 0);
             return returnValue.value;
         }
+
+        if (isInitializer)
+            return closure.getAt(0, 0);
         return null;
+    }
+
+    LoxFunction bind(LoxInstance instance) {
+        Environment environment = new Environment(closure);
+        environment.define(instance);
+        return new LoxFunction(declaration, environment, name, isInitializer);
     }
 
     @Override
