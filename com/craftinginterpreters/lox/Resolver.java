@@ -191,6 +191,8 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         // local variable check added in Chapter 11.
         scopes.peek().put("this", new Variable(stmt.name, VariableState.READ, 0));
 
+        scopes.peek().put("inner", new Variable(stmt.name, VariableState.READ, 1));
+
         for (Stmt.Function method : stmt.methods) {
             FunctionType declaration = FunctionType.METHOD;
             if (method.name.lexeme.equals("init")) {
