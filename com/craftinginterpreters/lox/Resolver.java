@@ -110,9 +110,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         currentFunction = type;
 
         beginScope();
-        for (Token param : function.params) {
-            declare(param);
-            define(param);
+        // A getter has no parameter list at all (not even an empty one).
+        if (function.params != null) {
+            for (Token param : function.params) {
+                declare(param);
+                define(param);
+            }
         }
         resolve(function.body);
         endScope();

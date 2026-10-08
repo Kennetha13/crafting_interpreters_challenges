@@ -19,14 +19,22 @@ class LoxFunction implements LoxCallable {
 
     @Override
     public int arity() {
+        if (declaration.params == null)
+            return 0;
         return declaration.params.size();
+    }
+
+    boolean isGetter() {
+        return declaration.params == null;
     }
 
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
         Environment environment = new Environment(closure);
-        for (int i = 0; i < declaration.params.size(); i++) {
-            environment.define(arguments.get(i));
+        if (declaration.params != null) {
+            for (int i = 0; i < declaration.params.size(); i++) {
+                environment.define(arguments.get(i));
+            }
         }
 
         try {
