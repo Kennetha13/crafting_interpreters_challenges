@@ -1,0 +1,9 @@
+var array = Array(3);
+print array;
+
+print array.length;
+
+array.set(1, "new");
+print array.get(1);
+
+print array;
