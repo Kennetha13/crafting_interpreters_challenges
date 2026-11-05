@@ -116,7 +116,14 @@ static TokenType identifierType() {
         switch (scanner.start[1]) {
           case 'a': return checkKeyword(2, 2, "se", TOKEN_CASE);
           case 'l': return checkKeyword(2, 3, "ass", TOKEN_CLASS);
-          case 'o': return checkKeyword(2, 3, "nst", TOKEN_CONST);
+          case 'o':
+            if (scanner.current - scanner.start > 3) {
+              switch (scanner.start[3]) {
+                case 's': return checkKeyword(2, 3, "nst", TOKEN_CONST);
+                case 't': return checkKeyword(2, 6, "ntinue", TOKEN_CONTINUE);
+              }
+            }
+            break;
         }
       }
       break;

@@ -59,6 +59,11 @@ Compiler* current = NULL;
 Chunk* compilingChunk;
 Table stringConstants;
 
+// The bytecode offset to jump to for a `continue`, and the scope depth of
+// the loop's own variables, used to pop the right number of locals.
+int innermostLoopStart = -1;
+int innermostLoopScopeDepth = 0;
+
 static Chunk* currentChunk() {
   return compilingChunk;
 }
@@ -579,7 +584,11 @@ static void forStatement() {
     expressionStatement();
   }
 
-  int loopStart = currentChunk()->count;
+  int surroundingLoopStart = innermostLoopStart;
+  int surroundingLoopScopeDepth = innermostLoopScopeDepth;
+  innermostLoopStart = currentChunk()->count;
+  innermostLoopScopeDepth = current->scopeDepth;
+
   int exitJump = -1;
   if (!match(TOKEN_SEMICOLON)) {
     expression();
@@ -597,18 +606,21 @@ static void forStatement() {
     emitByte(OP_POP);
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
 
-    emitLoop(loopStart);
-    loopStart = incrementStart;
+    emitLoop(innermostLoopStart);
+    innermostLoopStart = incrementStart;
     patchJump(bodyJump);
   }
 
   statement();
-  emitLoop(loopStart);
+  emitLoop(innermostLoopStart);
 
   if (exitJump != -1) {
     patchJump(exitJump);
     emitByte(OP_POP); // Condition.
   }
+
+  innermostLoopStart = surroundingLoopStart;
+  innermostLoopScopeDepth = surroundingLoopScopeDepth;
 
   endScope();
 }
@@ -638,7 +650,11 @@ static void printStatement() {
 }
 
 static void whileStatement() {
-  int loopStart = currentChunk()->count;
+  int surroundingLoopStart = innermostLoopStart;
+  int surroundingLoopScopeDepth = innermostLoopScopeDepth;
+  innermostLoopStart = currentChunk()->count;
+  innermostLoopScopeDepth = current->scopeDepth;
+
   consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
   expression();
   consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
@@ -646,10 +662,31 @@ static void whileStatement() {
   int exitJump = emitJump(OP_JUMP_IF_FALSE);
   emitByte(OP_POP);
   statement();
-  emitLoop(loopStart);
+  emitLoop(innermostLoopStart);
 
   patchJump(exitJump);
   emitByte(OP_POP);
+
+  innermostLoopStart = surroundingLoopStart;
+  innermostLoopScopeDepth = surroundingLoopScopeDepth;
+}
+
+static void continueStatement() {
+  if (innermostLoopStart == -1) {
+    error("Can't use 'continue' outside of a loop.");
+  }
+
+  consume(TOKEN_SEMICOLON, "Expect ';' after 'continue'.");
+
+  // Discard any locals created inside the loop.
+  for (int i = current->localCount - 1;
+       i >= 0 && current->locals[i].depth > innermostLoopScopeDepth;
+       i--) {
+    emitByte(OP_POP);
+  }
+
+  // Jump to the top of the innermost loop.
+  emitLoop(innermostLoopStart);
 }
 
 #define MAX_CASES 256
@@ -738,6 +775,7 @@ static void synchronize() {
       case TOKEN_IF:
       case TOKEN_WHILE:
       case TOKEN_SWITCH:
+      case TOKEN_CONTINUE:
       case TOKEN_PRINT:
       case TOKEN_RETURN:
         return;
@@ -773,6 +811,8 @@ static void statement() {
     forStatement();
   } else if (match(TOKEN_SWITCH)) {
     switchStatement();
+  } else if (match(TOKEN_CONTINUE)) {
+    continueStatement();
   } else if (match(TOKEN_LEFT_BRACE)) {
     beginScope();
     block();

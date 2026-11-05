@@ -1,0 +1,29 @@
+// continue in a while loop: skip printing even numbers.
+print("TEST 1 START");
+var i = 0;
+while (i < 5) {
+  i = i + 1;
+  if (i == 2) continue;
+  print i;
+}
+print("TEST 1 END");
+print "";
+
+// continue in a for loop: the increment clause still runs.
+print("TEST 2 START");
+for (var j = 0; j < 5; j = j + 1) {
+  if (j == 2) continue;
+  print j;
+}
+print("TEST 2 END");
+print "";
+
+// Nested loops: continue in the inner loop must not disturb the outer loop.
+print("TEST 3 START");
+for (var i = 0; i < 2; i = i + 1) {
+  for (var j = 0; j < 3; j = j + 1) {
+    if (j == 1) continue;
+    print i * 10 + j;
+  }
+}
+print("TEST 3 END");
