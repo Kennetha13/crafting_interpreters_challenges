@@ -1,0 +1,29 @@
+// Basic switch: matches case 2, no fallthrough into case 3/default.
+switch (2) {
+case 1:
+  print "one";
+case 2:
+  print "two";
+case 3:
+  print "three";
+default:
+  print "default";
+}
+print "after";
+
+// No case matches, falls through to default.
+switch (99) {
+case 1:
+  print "one";
+default:
+  print "no match";
+}
+
+// No default, no match at all: should just fall through cleanly.
+switch (5) {
+case 1:
+  print "one";
+case 2:
+  print "two";
+}
+print "survived no-match switch";
