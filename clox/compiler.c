@@ -43,6 +43,7 @@ typedef struct {
 typedef struct {
   Token name;
   int depth;
+  bool constant;
 } Local;
 
 typedef struct {
@@ -211,7 +212,7 @@ static int resolveLocal(Compiler* compiler, Token* name) {
   return -1;
 }
 
-static void addLocal(Token name) {
+static void addLocal(Token name, bool isConst) {
   if (current->localCount == UINT8_COUNT) {
     error("Too many local variables in function.");
     return;
@@ -220,9 +221,10 @@ static void addLocal(Token name) {
   Local* local = &current->locals[current->localCount++];
   local->name = name;
   local->depth = -1;
+  local->constant = isConst;
 }
 
-static void declareVariable() {
+static void declareVariable(bool isConst) {
   if (current->scopeDepth == 0) return;
 
   Token* name = &parser.previous;
@@ -237,13 +239,13 @@ static void declareVariable() {
     }
   }
 
-  addLocal(*name);
+  addLocal(*name, isConst);
 }
 
-static uint8_t parseVariable(const char* errorMessage) {
+static uint8_t parseVariable(const char* errorMessage, bool isConst) {
   consume(TOKEN_IDENTIFIER, errorMessage);
 
-  declareVariable();
+  declareVariable(isConst);
   if (current->scopeDepth > 0) return 0;
 
   return identifierConstant(&parser.previous);
@@ -254,10 +256,15 @@ static void markInitialized() {
       current->scopeDepth;
 }
 
-static void defineVariable(uint8_t global) {
+static void defineVariable(uint8_t global, bool isConst) {
   if (current->scopeDepth > 0) {
     markInitialized();
     return;
+  }
+
+  if (isConst) {
+    ObjString* name = AS_STRING(currentChunk()->constants.values[global]);
+    tableSet(&vm.constGlobals, name, BOOL_VAL(true));
   }
 
   emitBytes(OP_DEFINE_GLOBAL, global);
@@ -321,19 +328,29 @@ static void string(bool canAssign) {
 
 static void namedVariable(Token name, bool canAssign) {
   uint8_t getOp, setOp;
+  bool isConst;
   int arg = resolveLocal(current, &name);
   if (arg != -1) {
     getOp = OP_GET_LOCAL;
     setOp = OP_SET_LOCAL;
+    isConst = current->locals[arg].constant;
   } else {
     arg = identifierConstant(&name);
     getOp = OP_GET_GLOBAL;
     setOp = OP_SET_GLOBAL;
+    Value dummy;
+    isConst = tableGet(&vm.constGlobals,
+                       AS_STRING(currentChunk()->constants.values[arg]),
+                       &dummy);
   }
 
   if (canAssign && match(TOKEN_EQUAL)) {
     expression();
-    emitBytes(setOp, (uint8_t)arg);
+    if (isConst) {
+      error("Can't assign to a const variable.");
+    } else {
+      emitBytes(setOp, (uint8_t)arg);
+    }
   } else {
     emitBytes(getOp, (uint8_t)arg);
   }
@@ -441,7 +458,7 @@ static void block() {
 }
 
 static void varDeclaration() {
-  uint8_t global = parseVariable("Expect variable name.");
+  uint8_t global = parseVariable("Expect variable name.", false);
 
   if (match(TOKEN_EQUAL)) {
     expression();
@@ -451,7 +468,18 @@ static void varDeclaration() {
   consume(TOKEN_SEMICOLON,
           "Expect ';' after variable declaration.");
 
-  defineVariable(global);
+  defineVariable(global, false);
+}
+
+static void constDeclaration() {
+  uint8_t global = parseVariable("Expect variable name.", true);
+
+  consume(TOKEN_EQUAL, "Const variable must be initialized.");
+  expression();
+  consume(TOKEN_SEMICOLON,
+          "Expect ';' after variable declaration.");
+
+  defineVariable(global, true);
 }
 
 static void expressionStatement() {
@@ -475,6 +503,7 @@ static void synchronize() {
       case TOKEN_CLASS:
       case TOKEN_FUN:
       case TOKEN_VAR:
+      case TOKEN_CONST:
       case TOKEN_FOR:
       case TOKEN_IF:
       case TOKEN_WHILE:
@@ -493,6 +522,8 @@ static void synchronize() {
 static void declaration() {
   if (match(TOKEN_VAR)) {
     varDeclaration();
+  } else if (match(TOKEN_CONST)) {
+    constDeclaration();
   } else {
     statement();
   }

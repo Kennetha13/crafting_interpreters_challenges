@@ -32,11 +32,13 @@ void initVM() {
   resetStack();
   vm.objects = NULL;
   initTable(&vm.globals);
+  initTable(&vm.constGlobals);
   initTable(&vm.strings);
 }
 
 void freeVM() {
   freeTable(&vm.globals);
+  freeTable(&vm.constGlobals);
   freeTable(&vm.strings);
   freeObjects();
 }
