@@ -124,6 +124,16 @@ static InterpretResult run() {
         vm.stack[slot] = peek(0);
         break;
       }
+      case OP_GET_LOCAL_LONG: {
+        uint16_t slot = (uint16_t)(READ_BYTE() | (READ_BYTE() << 8));
+        push(vm.stack[slot]);
+        break;
+      }
+      case OP_SET_LOCAL_LONG: {
+        uint16_t slot = (uint16_t)(READ_BYTE() | (READ_BYTE() << 8));
+        vm.stack[slot] = peek(0);
+        break;
+      }
       case OP_GET_GLOBAL: {
         ObjString* name = READ_STRING();
         Value value;
