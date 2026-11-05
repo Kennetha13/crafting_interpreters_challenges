@@ -159,6 +159,14 @@ static TokenType identifierType() {
         }
       }
       break;
+    case 'u':
+      if (scanner.current - scanner.start > 2) {
+        switch (scanner.start[2]) {
+          case 'l': return checkKeyword(3, 3, "ess", TOKEN_UNLESS);
+          case 't': return checkKeyword(3, 2, "il", TOKEN_UNTIL);
+        }
+      }
+      break;
     case 'v': return checkKeyword(1, 2, "ar", TOKEN_VAR);
     case 'w': return checkKeyword(1, 4, "hile", TOKEN_WHILE);
   }

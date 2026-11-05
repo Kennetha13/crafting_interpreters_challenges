@@ -643,6 +643,25 @@ static void ifStatement() {
   patchJump(elseJump);
 }
 
+static void unlessStatement() {
+  consume(TOKEN_LEFT_PAREN, "Expect '(' after 'unless'.");
+  expression();
+  consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+  emitByte(OP_NOT);
+
+  int thenJump = emitJump(OP_JUMP_IF_FALSE);
+  emitByte(OP_POP);
+  statement();
+
+  int elseJump = emitJump(OP_JUMP);
+
+  patchJump(thenJump);
+  emitByte(OP_POP);
+
+  if (match(TOKEN_ELSE)) statement();
+  patchJump(elseJump);
+}
+
 static void printStatement() {
   expression();
   consume(TOKEN_SEMICOLON, "Expect ';' after value.");
@@ -687,6 +706,32 @@ static void continueStatement() {
 
   // Jump to the top of the innermost loop.
   emitLoop(innermostLoopStart);
+}
+
+// Custom control flow (Ch23 Challenge 3): `until` loops while the condition
+// is falsey -- sugar for `while (!condition)`. Structurally identical to
+// whileStatement(), so `continue` works inside it with no special-casing.
+static void untilStatement() {
+  int surroundingLoopStart = innermostLoopStart;
+  int surroundingLoopScopeDepth = innermostLoopScopeDepth;
+  innermostLoopStart = currentChunk()->count;
+  innermostLoopScopeDepth = current->scopeDepth;
+
+  consume(TOKEN_LEFT_PAREN, "Expect '(' after 'until'.");
+  expression();
+  consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+  emitByte(OP_NOT);
+
+  int exitJump = emitJump(OP_JUMP_IF_FALSE);
+  emitByte(OP_POP);
+  statement();
+  emitLoop(innermostLoopStart);
+
+  patchJump(exitJump);
+  emitByte(OP_POP);
+
+  innermostLoopStart = surroundingLoopStart;
+  innermostLoopScopeDepth = surroundingLoopScopeDepth;
 }
 
 #define MAX_CASES 256
@@ -773,7 +818,9 @@ static void synchronize() {
       case TOKEN_CONST:
       case TOKEN_FOR:
       case TOKEN_IF:
+      case TOKEN_UNLESS:
       case TOKEN_WHILE:
+      case TOKEN_UNTIL:
       case TOKEN_SWITCH:
       case TOKEN_CONTINUE:
       case TOKEN_PRINT:
@@ -805,8 +852,12 @@ static void statement() {
     printStatement();
   } else if (match(TOKEN_IF)) {
     ifStatement();
+  } else if (match(TOKEN_UNLESS)) {
+    unlessStatement();
   } else if (match(TOKEN_WHILE)) {
     whileStatement();
+  } else if (match(TOKEN_UNTIL)) {
+    untilStatement();
   } else if (match(TOKEN_FOR)) {
     forStatement();
   } else if (match(TOKEN_SWITCH)) {
