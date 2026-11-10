@@ -1,0 +1,10 @@
+// Call-free benchmark: a tight loop doing arithmetic, no OP_CALL/OP_RETURN.
+// Isolates the general READ_BYTE/jump-dispatch cost from call overhead.
+var start = clock();
+var sum = 0;
+for (var i = 0; i < 10000000; i = i + 1) {
+  sum = sum + i;
+}
+print sum;
+print "elapsed (s):";
+print clock() - start;

@@ -1,0 +1,62 @@
+// Basic function call with a return value.
+print("TEST 1 START");
+fun add(a, b) {
+  return a + b;
+}
+print add(2, 3);
+print("TEST 1 END");
+
+print "";
+
+// A function with no explicit return implicitly returns nil.
+print("TEST 2 START");
+fun noop() {
+  var x = 1;
+}
+print noop();
+print("TEST 2 END");
+
+print "";
+
+// Recursion.
+print("TEST 3 START");
+fun fib(n) {
+  if (n < 2) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+print fib(10);
+print("TEST 3 END");
+
+print "";
+
+// Native function (clock) -- just check it returns a number.
+print("TEST 4 START");
+print clock() > 0;
+print("TEST 4 END");
+
+print "";
+
+// A locally-declared function, called from inside its enclosing function.
+// (No closures yet -- that's Chapter 25 -- so it only uses its own params.)
+print("TEST 5 START");
+fun outer() {
+  fun inner(x) {
+    return x * 2;
+  }
+  return inner(21);
+}
+print outer();
+print("TEST 5 END");
+
+print "";
+
+// continue inside a loop that calls a function shouldn't be disturbed by the call.
+print("TEST 6 START");
+fun square(x) {
+  return x * x;
+}
+for (var i = 0; i < 5; i = i + 1) {
+  if (i == 2) continue;
+  print square(i);
+}
+print("TEST 6 END");
