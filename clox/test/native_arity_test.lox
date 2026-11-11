@@ -1,0 +1,12 @@
+// clock() expects 0 arguments -- calling it correctly should just work.
+print("TEST 1 START");
+print clock() >= 0;
+print("TEST 1 END");
+
+print "";
+
+// Calling it with too many arguments should be a clean runtime error,
+// not a silent read of uninitialized stack memory.
+print("TEST 2 START");
+print clock(1);
+print("TEST 2 END");
