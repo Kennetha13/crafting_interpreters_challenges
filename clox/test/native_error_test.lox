@@ -1,0 +1,12 @@
+// sqrt() succeeds normally.
+print("TEST 1 START");
+print sqrt(16);
+print("TEST 1 END");
+
+print "";
+
+// Passing a non-number should be a clean runtime error raised by the
+// native itself, not undefined C behavior.
+print("TEST 2 START");
+print sqrt("not a number");
+print("TEST 2 END");

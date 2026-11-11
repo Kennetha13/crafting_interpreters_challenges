@@ -35,7 +35,10 @@ typedef struct {
   ObjString* name;
 } ObjFunction;
 
-typedef Value (*NativeFn)(int argCount, Value* args);
+// Returns true on success, having written the result into args[-1].
+// Returns false on failure, having written a Lox string error message
+// into args[-1] instead.
+typedef bool (*NativeFn)(int argCount, Value* args);
 
 typedef struct {
   Obj obj;

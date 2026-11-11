@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -40,8 +41,25 @@ static void runtimeError(const char* format, ...) {
   resetStack();
 }
 
-static Value clockNative(int argCount, Value* args) {
-  return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+static bool clockNative(int argCount, Value* args) {
+  args[-1] = NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+  return true;
+}
+
+static bool sqrtNative(int argCount, Value* args) {
+  if (!IS_NUMBER(args[0])) {
+    args[-1] = OBJ_VAL(copyString("Argument to 'sqrt' must be a number.", 37));
+    return false;
+  }
+
+  double value = AS_NUMBER(args[0]);
+  if (value < 0) {
+    args[-1] = OBJ_VAL(copyString("Argument to 'sqrt' must not be negative.", 41));
+    return false;
+  }
+
+  args[-1] = NUMBER_VAL(sqrt(value));
+  return true;
 }
 
 static void defineNative(const char* name, NativeFn function, int arity) {
@@ -60,6 +78,7 @@ void initVM() {
   initTable(&vm.strings);
 
   defineNative("clock", clockNative, 0);
+  defineNative("sqrt", sqrtNative, 1);
 }
 
 void freeVM() {
@@ -118,10 +137,13 @@ static bool callValue(Value callee, int argCount) {
               native->arity, argCount);
           return false;
         }
-        Value result = native->function(argCount, vm.stackTop - argCount);
-        vm.stackTop -= argCount + 1;
-        push(result);
-        return true;
+        if (native->function(argCount, vm.stackTop - argCount)) {
+          vm.stackTop -= argCount;
+          return true;
+        } else {
+          runtimeError("%s", AS_CSTRING(vm.stackTop[-argCount - 1]));
+          return false;
+        }
       }
       default:
         break; // Non-callable object type.
