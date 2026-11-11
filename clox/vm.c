@@ -62,6 +62,55 @@ static bool sqrtNative(int argCount, Value* args) {
   return true;
 }
 
+static ObjString* valueToString(Value value) {
+  if (IS_STRING(value)) return AS_STRING(value);
+  if (IS_NIL(value)) return copyString("nil", 3);
+  if (IS_BOOL(value)) {
+    return AS_BOOL(value) ? copyString("true", 4) : copyString("false", 5);
+  }
+
+  char buf[64];
+  int len;
+  if (IS_NUMBER(value)) {
+    len = snprintf(buf, sizeof(buf), "%g", AS_NUMBER(value));
+  } else if (IS_FUNCTION(value)) {
+    ObjFunction* function = AS_FUNCTION(value);
+    len = function->name == NULL
+        ? snprintf(buf, sizeof(buf), "<script>")
+        : snprintf(buf, sizeof(buf), "<fn %s>", function->name->chars);
+  } else { // IS_NATIVE
+    len = snprintf(buf, sizeof(buf), "<native fn>");
+  }
+  if (len >= (int)sizeof(buf)) len = sizeof(buf) - 1;
+
+  return copyString(buf, len);
+}
+
+static bool strNative(int argCount, Value* args) {
+  args[-1] = OBJ_VAL(valueToString(args[0]));
+  return true;
+}
+
+static bool lenNative(int argCount, Value* args) {
+  if (!IS_STRING(args[0])) {
+    args[-1] = OBJ_VAL(copyString("Argument to 'len' must be a string.", 36));
+    return false;
+  }
+
+  args[-1] = NUMBER_VAL(AS_STRING(args[0])->length);
+  return true;
+}
+
+static bool powNative(int argCount, Value* args) {
+  if (!IS_NUMBER(args[0]) || !IS_NUMBER(args[1])) {
+    args[-1] = OBJ_VAL(copyString("Arguments to 'pow' must be numbers.", 36));
+    return false;
+  }
+
+  args[-1] = NUMBER_VAL(pow(AS_NUMBER(args[0]), AS_NUMBER(args[1])));
+  return true;
+}
+
 static void defineNative(const char* name, NativeFn function, int arity) {
   push(OBJ_VAL(copyString(name, (int)strlen(name))));
   push(OBJ_VAL(newNative(function, arity)));
@@ -79,6 +128,9 @@ void initVM() {
 
   defineNative("clock", clockNative, 0);
   defineNative("sqrt", sqrtNative, 1);
+  defineNative("str", strNative, 1);
+  defineNative("len", lenNative, 1);
+  defineNative("pow", powNative, 2);
 }
 
 void freeVM() {

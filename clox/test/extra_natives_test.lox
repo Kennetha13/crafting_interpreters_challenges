@@ -1,0 +1,33 @@
+// str() is the practical one: Lox's `+` only accepts two numbers or two
+// strings, so without str() you simply cannot build a message out of a
+// number. This is the thing that was most annoying to not have.
+print("TEST 1 START");
+var count = 5;
+print "Count: " + str(count);
+print "Pi is roughly " + str(3.14159);
+print "Flag is " + str(true) + ", nothing is " + str(nil);
+print("TEST 1 END");
+
+print "";
+
+// len() for strings.
+print("TEST 2 START");
+print len("hello");
+print len("");
+print("TEST 2 END");
+
+print "";
+
+// pow() complements sqrt().
+print("TEST 3 START");
+print pow(2, 10);
+print pow(9, 0.5);
+print sqrt(pow(3, 2) + pow(4, 2));
+print("TEST 3 END");
+
+print "";
+
+// Error paths still work cleanly.
+print("TEST 4 START");
+print len(42);
+print("TEST 4 END");
